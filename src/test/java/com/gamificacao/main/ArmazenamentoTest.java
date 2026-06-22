@@ -16,9 +16,7 @@ class ArmazenamentoTest {
     void deveRetornarZeroQuandoUsuarioNaoPossuiPontosDoTipo() {
         Path arquivo = diretorioTemporario.resolve("pontos.txt");
         Armazenamento armazenamento = new Armazenamento(arquivo);
-
         int pontos = armazenamento.recuperarPontos("helbert", "estrela");
-
         assertEquals(0, pontos);
     }
 }
