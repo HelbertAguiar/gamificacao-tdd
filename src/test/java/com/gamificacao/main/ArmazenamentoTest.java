@@ -30,4 +30,18 @@ class ArmazenamentoTest {
         Assertions.assertEquals(34, pontuacaoUsuario);
     }
 
+    @Test
+    void deveSomarPontosDoMesmoUsuarioEMesmoTipoMultiplasChamadas() {
+        Path arquivo = diretorioTemporario.resolve("pontos.txt");
+        Armazenamento armazenamento = new Armazenamento(arquivo);
+        int pontuacaoUsuarioPrimeiraChamada = 0;
+        armazenamento.registrarPontos("joao", "ouro", 10);
+        pontuacaoUsuarioPrimeiraChamada+=armazenamento.recuperarPontos("joao", "ouro");
+        assertEquals(10, pontuacaoUsuarioPrimeiraChamada);
+        int pontuacaoUsuarioSegundaChamada = 0;
+        armazenamento.registrarPontos("joao", "ouro", 20);
+        pontuacaoUsuarioSegundaChamada+=armazenamento.recuperarPontos("joao", "ouro");
+        assertEquals(30, pontuacaoUsuarioSegundaChamada);
+    }
+
 }
