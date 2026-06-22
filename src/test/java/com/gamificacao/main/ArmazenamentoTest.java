@@ -1,5 +1,6 @@
 package com.gamificacao.main;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -16,7 +17,17 @@ class ArmazenamentoTest {
     void deveRetornarZeroQuandoUsuarioNaoPossuiPontosDoTipo() {
         Path arquivo = diretorioTemporario.resolve("pontos.txt");
         Armazenamento armazenamento = new Armazenamento(arquivo);
-        int pontos = armazenamento.recuperarPontos("helbert", "estrela");
-        assertEquals(0, pontos);
+        int pontuacaoUsuario = armazenamento.recuperarPontos("helbert", "estrela");
+        Assertions.assertEquals(0, pontuacaoUsuario);
     }
+
+    @Test
+    void deveRegistrarPontosUsuario() {
+        Path arquivo = diretorioTemporario.resolve("pontos.txt");
+        Armazenamento armazenamento = new Armazenamento(arquivo);
+        armazenamento.registrarPontos("helbert", "estrela", 34);
+        int pontuacaoUsuario = armazenamento.recuperarPontos("helbert", "estrela");
+        Assertions.assertEquals(34, pontuacaoUsuario);
+    }
+
 }
