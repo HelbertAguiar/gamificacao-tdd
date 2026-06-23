@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Files;
+import java.util.Set;
+
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.CREATE;
 
@@ -13,6 +15,23 @@ public class Armazenamento implements RepositorioPontos {
 
     public Armazenamento(Path arquivo) {
         this.arquivo = arquivo;
+    }
+
+    @Override
+    public Set<String> recuperarUsuarios() {
+        if (!Files.exists(arquivo)) {
+            return Set.of();
+        }
+
+        try {
+            return Files.readAllLines(arquivo, StandardCharsets.UTF_8)
+                    .stream()
+                    .map(linha -> linha.split(";"))
+                    .map(partes -> partes[0])
+                    .collect(java.util.stream.Collectors.toSet());
+        } catch (IOException e) {
+            throw new IllegalStateException("Erro ao ler usuários do arquivo.", e);
+        }
     }
 
     @Override
