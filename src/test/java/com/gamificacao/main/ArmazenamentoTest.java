@@ -8,6 +8,7 @@ import java.nio.file.Path;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class ArmazenamentoTest {
 
@@ -100,6 +101,16 @@ class ArmazenamentoTest {
         assertEquals(
                 Set.of("estrela", "moeda", "curtida"),
                 armazenamento.recuperarTiposDePonto()
+        );
+    }
+
+    @Test
+    void naoDeveRegistrarQuantidadeMenorOuIgualAZero() {
+        Path arquivo = diretorioTemporario.resolve("pontos.txt");
+        Armazenamento armazenamento = new Armazenamento(arquivo);
+        assertThrows(
+            IllegalArgumentException.class,
+            () -> armazenamento.registrarPontos("helbert", "estrela", 0)
         );
     }
 
