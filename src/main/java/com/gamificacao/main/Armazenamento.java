@@ -19,19 +19,20 @@ public class Armazenamento implements RepositorioPontos {
 
     @Override
     public Set<String> recuperarUsuarios() {
-        if (!Files.exists(arquivo)) {
-            return Set.of();
-        }
+        return lerRegistros()
+                .stream()
+                .map(partes -> partes[0])
+                .collect(java.util.stream.Collectors.toSet());
+    }
 
-        try {
-            return Files.readAllLines(arquivo, StandardCharsets.UTF_8)
-                    .stream()
-                    .map(linha -> linha.split(";"))
-                    .map(partes -> partes[0])
-                    .collect(java.util.stream.Collectors.toSet());
-        } catch (IOException e) {
-            throw new IllegalStateException("Erro ao ler usuários do arquivo.", e);
-        }
+    @Override
+    public int recuperarPontos(String usuario, String tipo) {
+        return lerRegistros()
+                .stream()
+                .filter(partes -> partes[0].equals(usuario))
+                .filter(partes -> partes[1].equals(tipo))
+                .mapToInt(partes -> Integer.parseInt(partes[2]))
+                .sum();
     }
 
     @Override
@@ -44,22 +45,19 @@ public class Armazenamento implements RepositorioPontos {
         }
     }
 
-    @Override
-    public int recuperarPontos(String usuario, String tipo) {
+    private java.util.List<String[]> lerRegistros() {
         if (!Files.exists(arquivo)) {
-            return 0;
+            return java.util.List.of();
         }
 
         try {
             return Files.readAllLines(arquivo, StandardCharsets.UTF_8)
                     .stream()
                     .map(linha -> linha.split(";"))
-                    .filter(partes -> partes[0].equals(usuario))
-                    .filter(partes -> partes[1].equals(tipo))
-                    .mapToInt(partes -> Integer.parseInt(partes[2]))
-                    .sum();
+                    .toList();
         } catch (IOException e) {
-            throw new IllegalStateException("Erro ao ler pontos do arquivo.", e);
+            throw new IllegalStateException("Erro ao ler arquivo de pontos.", e);
         }
     }
+
 }
