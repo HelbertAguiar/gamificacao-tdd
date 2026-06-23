@@ -36,6 +36,14 @@ public class Armazenamento implements RepositorioPontos {
     }
 
     @Override
+    public Set<String> recuperarTiposDePonto() {
+        return lerRegistros()
+                .stream()
+                .map(partes -> partes[1])
+                .collect(java.util.stream.Collectors.toSet());
+    }
+
+    @Override
     public void registrarPontos(String usuario, String tipoPonto, int pontuacao) {
         String linha = usuario + ";" + tipoPonto + ";" + pontuacao + System.lineSeparator();
         try {

@@ -94,11 +94,9 @@ class ArmazenamentoTest {
     void deveRecuperarTodosOsTiposDePontoRegistrados() {
         Path arquivo = diretorioTemporario.resolve("pontos.txt");
         Armazenamento armazenamento = new Armazenamento(arquivo);
-
         armazenamento.registrarPontos("helbert", "estrela", 10);
         armazenamento.registrarPontos("ana", "moeda", 20);
         armazenamento.registrarPontos("rodrigo", "curtida", 5);
-
         assertEquals(
                 Set.of("estrela", "moeda", "curtida"),
                 armazenamento.recuperarTiposDePonto()

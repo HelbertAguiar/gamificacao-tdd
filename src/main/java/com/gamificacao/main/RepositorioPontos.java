@@ -6,4 +6,5 @@ public interface RepositorioPontos {
     void registrarPontos(String usuario, String tipoPonto, int pontuacao);
     int recuperarPontos(String usuario, String tipoPonto);
     Set<String> recuperarUsuarios();
+    Set<String> recuperarTiposDePonto();
 }
