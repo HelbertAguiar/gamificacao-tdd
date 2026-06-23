@@ -1,242 +1,312 @@
-# Análise do Projeto `gamificacao-tdd`
+# Gamificação TDD
 
-## Parte 1 — Cumprimento dos Requisitos
+Projeto desenvolvido como exercício de **TDD (Test-Driven Development)** em Java, com foco em um componente simples de gamificação.
 
-### 1.1 Classe `Armazenamento`
+O sistema permite registrar pontos para usuários, consultar os pontos acumulados por tipo e gerar rankings. Os dados são persistidos em arquivo texto por meio da classe `Armazenamento`, enquanto a classe `Placar` concentra as operações principais da aplicação.
 
-#### Requisito: Armazenar que um usuário recebeu uma quantidade de um tipo de ponto.
-**✅ Atendido.** O método `registrarPontos(String usuario, String tipo, int quantidade)` grava uma linha no formato `usuario;tipo;quantidade` no arquivo via `Files.writeString(arquivo, linha, UTF_8, CREATE, APPEND)`. A opção `APPEND` garante a abordagem incremental: cada registro é acrescentado ao final do arquivo, sem sobrescrever dados anteriores.
+---
 
-```java
-// Armazenamento.java – linha 52
-String linha = usuario + ";" + tipo + ";" + quantidade + System.lineSeparator();
-Files.writeString(arquivo, linha, StandardCharsets.UTF_8, CREATE, APPEND);
+## Objetivo
+
+Implementar, de forma incremental e guiada por testes, um componente capaz de:
+
+- registrar pontos de diferentes tipos para usuários;
+- recuperar a pontuação de um usuário em determinado tipo;
+- listar todos os pontos de um usuário;
+- gerar ranking por tipo de ponto;
+- persistir os dados em arquivo;
+- testar separadamente armazenamento, placar e integração entre as classes.
+
+---
+
+## Tecnologias utilizadas
+
+- Java
+- Maven
+- JUnit
+- IntelliJ IDEA
+
+O projeto não utiliza Mockito. Os testes da classe `Placar` usam um mock manual implementado no próprio código de teste.
+
+---
+
+## Estrutura do projeto
+
+```text
+src
+├── main
+│   └── java
+│       └── br/com/gamificacao
+│           ├── Armazenamento.java
+│           ├── Placar.java
+│           ├── RankingItem.java
+│           └── RepositorioPontos.java
+└── test
+    └── java
+        └── br/com/gamificacao
+            ├── ArmazenamentoTest.java
+            ├── PlacarTest.java
+            ├── PlacarArmazenamentoIntegracaoTest.java
+            └── RepositorioDePontosMock.java
 ```
 
 ---
 
-#### Requisito: Recuperar quantos pontos de um tipo tem um usuário.
-**✅ Atendido.** O método `recuperarPontos(String usuario, String tipo)` lê todas as linhas do arquivo (via `lerRegistros()`), filtra pelo usuário e pelo tipo e soma todas as ocorrências. Isso garante correta acumulação mesmo com múltiplos registros incrementais.
+## Como o armazenamento funciona
 
-```java
-// Armazenamento.java – linhas 29-36
-return lerRegistros().stream()
-    .filter(partes -> partes[0].equals(usuario))
-    .filter(partes -> partes[1].equals(tipo))
-    .mapToInt(partes -> Integer.parseInt(partes[2]))
-    .sum();
+A persistência foi feita usando um arquivo texto simples. Cada pontuação registrada é adicionada ao final do arquivo em uma nova linha, no formato:
+
+```text
+usuario;tipo;quantidade
+```
+
+Exemplo:
+
+```text
+guerra;estrela;10
+guerra;estrela;15
+fernandes;moeda;20
+```
+
+Essa abordagem é incremental: o sistema não sobrescreve registros anteriores. Para recuperar a pontuação total, o arquivo é lido, os registros são filtrados por usuário e tipo, e as quantidades encontradas são somadas.
+
+---
+
+## Principais classes
+
+### `Armazenamento`
+
+Responsável por gravar e recuperar os dados em arquivo.
+
+Principais operações:
+
+- registrar pontos;
+- recuperar pontos de um usuário por tipo;
+- listar usuários registrados;
+- listar tipos de pontos registrados.
+
+### `Placar`
+
+Responsável pela regra principal do componente.
+
+Principais operações:
+
+- registrar pontos para um usuário;
+- recuperar todos os pontos de um usuário;
+- gerar ranking de usuários por tipo de ponto.
+
+### `RankingItem`
+
+Representa uma linha do ranking, contendo:
+
+- nome do usuário;
+- quantidade de pontos.
+
+### `RepositorioPontos`
+
+Interface usada para desacoplar o `Placar` da implementação concreta de armazenamento.
+
+Isso permite testar o `Placar` com um mock manual, sem depender de arquivos reais.
+
+---
+
+## Como executar o projeto
+
+### 1. Verificar se o Java está instalado
+
+No terminal, execute:
+
+```bash
+java -version
+```
+
+Também é recomendável verificar o compilador:
+
+```bash
+javac -version
+```
+
+Se o projeto estiver configurado para Java 25, confirme se a versão instalada é compatível.
+
+---
+
+### 2. Verificar se o Maven está instalado
+
+Execute:
+
+```bash
+mvn -version
+```
+
+O comando deve exibir a versão do Maven e a versão do Java usada por ele.
+
+---
+
+A pasta raiz deve conter o arquivo:
+
+```text
+pom.xml
 ```
 
 ---
 
-#### Requisito: Retornar todos os usuários que já receberam algum tipo de ponto.
-**✅ Atendido.** O método `recuperarUsuarios()` extrai o primeiro campo de cada linha do arquivo e os agrega em um `Set<String>`, eliminando duplicatas naturalmente.
+## Como executar os testes
 
----
+### Pelo terminal
 
-#### Requisito: Retornar todos os tipos de ponto que já foram registrados para algum usuário.
-**✅ Atendido.** O método `recuperarTiposDePonto()` extrai o segundo campo de cada linha e os agrega em um `Set<String>`.
+Na raiz do projeto, execute:
 
----
+```bash
+mvn test
+```
 
-#### Requisito: Os dados devem ser armazenados em arquivo.
-**✅ Atendido.** A classe usa exclusivamente `java.nio.file.Files` para leitura e escrita. O formato CSV simples (`usuario;tipo;quantidade`, uma entrada por linha) é transparente ao restante do sistema.
+Esse comando compila o projeto e executa todos os testes automatizados.
 
----
+Resultado esperado:
 
-#### Requisito: Se a aplicação cair, deve-se recuperar todos os dados armazenados.
-**✅ Atendido.** Não há cache em memória; cada leitura percorre o arquivo completo (`lerRegistros()`). Portanto, em caso de queda e reinício, todos os dados persistidos no arquivo são lidos corretamente.
-
----
-
-#### Requisito: Validação de quantidade positiva.
-**✅ Atendido** (além do enunciado base, mas demonstrado em teste). O método `registrarPontos` lança `IllegalArgumentException` quando `quantidade <= 0`, protegendo a integridade dos dados.
-
----
-
-### 1.2 Classe `Placar`
-
-#### Requisito: Registrar um tipo de ponto para um usuário.
-**✅ Atendido.** O método `registrarPontos` simplesmente delega para `repositorio.registrarPontos`, cumprindo o princípio de que `Placar` coordena e `Armazenamento` persiste.
-
----
-
-#### Requisito: Retornar todos os pontos de um usuário (sem incluir tipos com valor zero).
-**✅ Atendido.** O método `recuperarPontosDoUsuario` itera sobre todos os tipos registrados no repositório, consulta a pontuação de cada um e inclui no mapa de retorno apenas aqueles com `quantidade > 0`. Usuário sem nenhum ponto de determinado tipo não recebe essa entrada no resultado.
-
-```java
-// Placar.java – linhas 21-31
-for (String tipo : repositorio.recuperarTiposDePonto()) {
-    int quantidade = repositorio.recuperarPontos(usuario, tipo);
-    if (quantidade > 0) {
-        pontos.put(tipo, quantidade);
-    }
-}
+```text
+BUILD SUCCESS
 ```
 
 ---
 
-#### Requisito: Retornar ranking de um tipo de ponto, ordenado do maior para o menor, excluindo usuários sem pontos daquele tipo.
-**✅ Atendido.** O método `recuperarRanking` mapeia cada usuário para um `RankingItem`, filtra os que possuem zero pontos e ordena em ordem decrescente.
+### Pelo IntelliJ IDEA
 
-```java
-// Placar.java – linhas 35-40
-return repositorio.recuperarUsuarios().stream()
-    .map(usuario -> new RankingItem(usuario, repositorio.recuperarPontos(usuario, tipo)))
-    .filter(item -> item.pontos() > 0)
-    .sorted(Comparator.comparingInt(RankingItem::pontos).reversed())
-    .toList();
+Também é possível executar os testes diretamente pela IDE:
+
+1. abra a pasta `src/test/java`;
+2. clique com o botão direito sobre a classe de teste desejada;
+3. selecione **Run**.
+
+Para executar todos os testes:
+
+1. clique com o botão direito na pasta `test`;
+2. selecione **Run 'All Tests'**.
+
+---
+
+## Tipos de teste
+
+O projeto possui três grupos de teste.
+
+### Testes de `Armazenamento`
+
+Validam a persistência em arquivo real, usando diretórios temporários criados durante a execução dos testes.
+
+Esses testes verificam se:
+
+- os pontos são gravados;
+- os pontos são recuperados corretamente;
+- registros repetidos são somados;
+- usuários e tipos diferentes não são misturados;
+- todos os usuários são listados;
+- todos os tipos de ponto são listados.
+
+### Testes de `Placar`
+
+Validam a regra de negócio do placar usando um mock manual.
+
+Esses testes verificam se:
+
+- o registro de pontos é delegado ao repositório;
+- todos os pontos de um usuário são retornados;
+- tipos sem pontuação não aparecem no resultado;
+- o ranking é ordenado do maior para o menor;
+- usuários sem pontos no tipo consultado não aparecem no ranking.
+
+### Testes de integração
+
+Validam `Placar` e `Armazenamento` funcionando juntos.
+
+Esses testes usam arquivo real e verificam o fluxo completo:
+
+```text
+Placar → Armazenamento → Arquivo → Consulta → Resultado
 ```
 
 ---
 
-### 1.3 Estrutura e Responsabilidades
+## Exemplo de uso
 
-#### Requisito: `Placar` é composta por uma instância de `Armazenamento` (ou de `RepositorioPontos`), a quem delega armazenamento e recuperação.
-**✅ Atendido.** `Placar` recebe no construtor uma instância de `RepositorioPontos` (interface), que pode ser `Armazenamento` (produção) ou `RepositorioDePontosMock` (testes). Isso aplica corretamente **injeção de dependência** e **inversão de dependência**.
+```java
+Path arquivo = Path.of("pontos.txt");
 
----
+Armazenamento armazenamento = new Armazenamento(arquivo);
+Placar placar = new Placar(armazenamento);
 
-#### Requisito: Nenhum método público além de construtores e métodos de acesso nas classes `Armazenamento` e `Placar`.
-**✅ Atendido.**
-- `Armazenamento`: construtor + 4 métodos públicos que implementam a interface `RepositorioPontos`. O método auxiliar `lerRegistros()` é `private`.
-- `Placar`: construtor + 3 métodos públicos definidos pelo enunciado. Nenhum método extra público foi adicionado.
+placar.registrarPontos("guerra", "estrela", 10);
+placar.registrarPontos("guerra", "estrela", 15);
+placar.registrarPontos("fernandes", "estrela", 20);
 
----
+System.out.println(placar.recuperarPontosDoUsuario("guerra"));
+System.out.println(placar.recuperarRanking("estrela"));
+```
 
-#### Requisito: Outras classes não devem depender de como o armazenamento é feito no arquivo.
-**✅ Atendido.** A interface `RepositorioPontos` abstrai completamente o mecanismo de persistência. `Placar` depende apenas da interface, nunca de `Armazenamento` diretamente. Os testes de `Placar` jamais tocam em arquivo — usam exclusivamente o mock em memória.
+Saída esperada, de forma aproximada:
 
----
-
-### 1.4 Testes
-
-#### Requisito: Testes da classe `Armazenamento` devem usar arquivos reais.
-**✅ Atendido.** `ArmazenamentoTest` usa a anotação `@TempDir` do JUnit 5, que cria um diretório temporário real no sistema de arquivos para cada teste, garantindo isolamento e limpeza automática.
-
----
-
-#### Requisito: Testes da classe `Placar` devem usar mock object para `Armazenamento`.
-**✅ Atendido.** `PlacarTest` usa exclusivamente `RepositorioDePontosMock`, uma implementação em memória de `RepositorioPontos`. O mock também expõe os campos `ultimoUsuarioRegistrado`, `ultimoTipoRegistrado` e `ultimaQuantidadeRegistrada` para verificar que `Placar` delega corretamente ao repositório — característica clássica de um mock object.
+```text
+{estrela=25}
+[RankingItem[usuario=guerra, pontos=25], RankingItem[usuario=fernandes, pontos=20]]
+```
 
 ---
 
-#### Requisito: Devem ser criados testes de integração incluindo as duas classes.
-**✅ Atendido.** A classe `PlacarArmazenamentoIntegracaoTest` instancia `Armazenamento` real (com `@TempDir`) e `Placar` real, exercitando o fluxo completo de ponta a ponta: registro de pontos, consulta por usuário e geração de ranking.
+## Observações sobre TDD
+
+O desenvolvimento foi feito seguindo o ciclo:
+
+```text
+Red → Green → Refactor
+```
+
+Ou seja:
+
+1. primeiro foi escrito um teste que falhava;
+2. depois foi criada a implementação mínima para o teste passar;
+3. por fim, o código foi refatorado mantendo todos os testes passando.
+
+Essa abordagem ajudou a manter o código simples, coeso e diretamente ligado aos requisitos da atividade.
 
 ---
 
-### 1.5 Classes Auxiliares
+## Comandos úteis
 
-| Classe/Interface | Papel | Avaliação |
-|---|---|---|
-| `RepositorioPontos` (interface) | Contrato entre `Placar` e a camada de persistência | ✅ Permite substituição por qualquer implementação |
-| `RankingItem` (record) | Value object imutável para item de ranking | ✅ Uso adequado de Java record; elimina boilerplate |
-| `RepositorioDePontosMock` | Implementação em memória para testes de `Placar` | ✅ Implementa a interface corretamente |
+Executar todos os testes:
 
----
+```bash
+mvn test
+```
 
-## Parte 2 — Ciclos TDD Identificados pelos Commits
+Limpar arquivos gerados pelo Maven:
 
-O histórico de 23 commits evidencia a aplicação do ciclo **Red → Green → Refactor** ao longo de todo o desenvolvimento.
+```bash
+mvn clean
+```
 
----
+Limpar e testar novamente:
 
-### Ciclo 1 — Bootstrap e primeiros testes de `Armazenamento`
+```bash
+mvn clean test
+```
 
-| Commit | Hash | Fase TDD |
-|---|---|---|
-| `add initial project setup with .gitignore, pom.xml, and ArmazenamentoTest class` | `78ac9e1` | 🔴 RED |
-| `add Armazenamento class and RepositorioPontos interface with basic methods` | `1ccce1b` | 🟢 GREEN |
-| `add tests for Armazenamento class to validate point retrieval and registration` | `5d2a8cb` | 🔴 RED |
-| `implement point registration and retrieval in Armazenamento class` | `f202285` | 🟢 GREEN |
+Compilar sem executar testes:
 
-**Descrição:** O projeto começa com a estrutura mínima e os primeiros dois testes do `Armazenamento` — um que verifica retorno zero para usuário sem pontos e outro que registra e recupera pontos. A classe esqueleto é criada para os testes compilarem (RED), depois a implementação real os faz passar (GREEN).
-
----
-
-### Ciclo 2 — Acumulação de pontos
-
-| Commit | Hash | Fase TDD |
-|---|---|---|
-| `add test to validate point accumulation for the same user and type` | `7c44703` | 🔴 RED |
-| `add test to validate point accumulation for multiple users and calls` | `2e8a6dc` | 🔴 RED |
-| `add test to validate point accumulation for distinct users` | `a2cee71` | 🔴 RED |
-| `add test to validate retrieval of all users who received points` | `4e7e708` | 🔴 RED |
-| `implement user retrieval method in Armazenamento class` | `d51d220` | 🟢 GREEN |
-| `refactor` | `5be6a59` | 🔄 REFACTOR |
-
-**Descrição:** Três testes RED são adicionados em sequência, explorando cenários progressivamente mais complexos de acumulação: um usuário, múltiplos usuários em sequência e usuários distintos sem mistura de pontos. Em seguida, o teste de recuperação de todos os usuários é adicionado. Um único commit de implementação satisfaz todos os casos. O commit `refactor` consolida o código — provavelmente extraindo o método `lerRegistros()` como método privado reutilizável.
+```bash
+mvn compile
+```
 
 ---
 
-### Ciclo 3 — Recuperação de tipos de ponto
+## Status
 
-| Commit | Hash | Fase TDD |
-|---|---|---|
-| `add test to validate retrieval of all registered point types` | `2015ca2` | 🔴 RED |
-| `add method to retrieve all registered point types` | `517cf02` | 🟢 GREEN |
+Requisitos principais atendidos:
 
-**Descrição:** Ciclo curto e preciso. Primeiro o teste `deveRecuperarTodosOsTiposDePontoRegistrados`, depois a implementação de `recuperarTiposDePonto()` mapeando o segundo campo de cada registro.
-
----
-
-### Ciclo 4 — Validação de entrada
-
-| Commit | Hash | Fase TDD |
-|---|---|---|
-| `add test to validate that registering points with zero or negative quantity throws an exception` | `b2ebc4f` | 🔴 RED |
-| `add validation to ensure positive quantity when registering points` | `1e570eb` | 🟢 GREEN |
-
-**Descrição:** Ciclo clássico de validação. O teste `naoDeveRegistrarQuantidadeMenorOuIgualAZero` usa `assertThrows` para especificar o comportamento esperado antes da guarda ser inserida no método `registrarPontos`.
-
----
-
-### Ciclo 5 — Classe `Placar` e delegação ao repositório
-
-| Commit | Hash | Fase TDD |
-|---|---|---|
-| `add Placar class and corresponding test for point registration` | `1c757bb` | 🔴 RED |
-| `add RepositorioDePontosMock class to manage point registration and retrieval` | `b1086a5` | 🔴 RED (infraestrutura) |
-| `add Placar class constructor and method to register points` | `3c26b13` | 🟢 GREEN |
-
-**Descrição:** Inicia o desenvolvimento da classe `Placar`. O teste `deveRegistrarPontosDelegandoParaORepositorio` verifica que `Placar` delega ao repositório com os valores corretos. A criação do `RepositorioDePontosMock` é necessária para que o teste compile e rode — é a infraestrutura de teste sendo construída antes do código de produção, prática consistente com TDD.
-
----
-
-### Ciclo 6 — Recuperação de pontos do usuário em `Placar`
-
-| Commit | Hash | Fase TDD |
-|---|---|---|
-| `add test to retrieve all points for a user in Placar class` | `8dbc447` | 🔴 RED |
-| `add method to retrieve points for a user in Placar class` | `dab5395` | 🟢 GREEN |
-| `add tests for point retrieval and ranking in Placar class` | `a4dab52` | 🔴 RED |
-
-**Descrição:** O teste `deveRetornarTodosOsPontosDeUmUsuario` força a criação de `recuperarPontosDoUsuario`. O commit `a4dab52` adiciona o teste complementar `naoDeveRetornarTipoDePontoComValorZeroParaUsuario`, assegurando que tipos sem pontos sejam filtrados.
-
----
-
-### Ciclo 7 — Ranking
-
-| Commit | Hash | Fase TDD |
-|---|---|---|
-| `add tests for point retrieval and ranking in Placar class` | `a4dab52` | 🔴 RED |
-| `add method to retrieve ranking and create RankingItem class` | `be43710` | 🟢 GREEN |
-| `add test to ensure ranking does not include users without points of that type` | `b3b88df` | 🔴 RED → 🟢 GREEN |
-
-**Descrição:** O último grande ciclo. O teste `deveRetornarRankingDeUmTipoDePontoEmOrdemDecrescente` especifica a ordenação. Para implementá-lo, o record `RankingItem` e o método `recuperarRanking` são criados. O commit final adiciona o teste `rankingNaoDeveIncluirUsuarioSemPontosDaqueleTipo`, que refina o comportamento do filtro `item.pontos() > 0` — o qual provavelmente já existia na implementação, tornando este um ciclo RED instantaneamente GREEN (característica de boa implementação antecipada).
-
----
-
-## Resumo
-
-| Aspecto | Resultado |
-|---|---|
-| Requisitos de implementação | ✅ Todos atendidos |
-| Uso correto de Mock Objects | ✅ `RepositorioDePontosMock` isola `Placar` da persistência |
-| Divisão de responsabilidades | ✅ `Armazenamento` persiste, `Placar` coordena, `RepositorioPontos` abstrai |
-| Testes com arquivo real | ✅ `ArmazenamentoTest` com `@TempDir` |
-| Testes de integração | ✅ `PlacarArmazenamentoIntegracaoTest` |
-| Ciclos TDD documentados por commits | ✅ 7 ciclos Red→Green→Refactor identificados |
-| Organização do código | ✅ Separação clara em pacotes, nomes expressivos, uso de `record`, streams e interface |
-
+- armazenamento em arquivo;
+- recuperação de pontos por usuário e tipo;
+- listagem de usuários;
+- listagem de tipos de ponto;
+- consulta de todos os pontos de um usuário;
+- ranking por tipo de ponto;
+- testes unitários;
+- testes com mock manual;
+- testes de integração.
