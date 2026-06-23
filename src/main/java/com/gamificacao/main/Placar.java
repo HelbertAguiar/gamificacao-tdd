@@ -2,6 +2,7 @@ package com.gamificacao.main;
 
 import com.gamificacao.main.RepositorioPontos;
 
+import java.util.List;
 import java.util.Map;
 
 public class Placar {
@@ -28,6 +29,15 @@ public class Placar {
         }
 
         return pontos;
+    }
+
+    public List<RankingItem> recuperarRanking(String tipo) {
+        return repositorio.recuperarUsuarios()
+                .stream()
+                .map(usuario -> new RankingItem(usuario, repositorio.recuperarPontos(usuario, tipo)))
+                .filter(item -> item.pontos() > 0)
+                .sorted(java.util.Comparator.comparingInt(RankingItem::pontos).reversed())
+                .toList();
     }
 
 }
