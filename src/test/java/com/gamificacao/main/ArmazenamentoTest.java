@@ -66,4 +66,14 @@ class ArmazenamentoTest {
         assertEquals(30, pontuacaoUsuarioQuartaChamada);
     }
 
+    @Test
+    void deveSomarSemMisturarUsuariosDistintos() {
+        Path arquivo = diretorioTemporario.resolve("pontos.txt");
+        Armazenamento armazenamento = new Armazenamento(arquivo);
+        armazenamento.registrarPontos("eduardo", "estrela", 10);
+        armazenamento.registrarPontos("fernandes", "estrela", 25);
+        assertEquals(10, armazenamento.recuperarPontos("eduardo", "estrela"));
+        assertEquals(25, armazenamento.recuperarPontos("fernandes", "estrela"));
+    }
+
 }
