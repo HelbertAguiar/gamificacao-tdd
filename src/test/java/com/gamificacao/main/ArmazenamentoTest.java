@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 import java.nio.file.Path;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -74,6 +75,19 @@ class ArmazenamentoTest {
         armazenamento.registrarPontos("fernandes", "estrela", 25);
         assertEquals(10, armazenamento.recuperarPontos("eduardo", "estrela"));
         assertEquals(25, armazenamento.recuperarPontos("fernandes", "estrela"));
+    }
+
+    @Test
+    void deveRecuperarTodosOsUsuariosQueReceberamPontos() {
+        Path arquivo = diretorioTemporario.resolve("pontos.txt");
+        Armazenamento armazenamento = new Armazenamento(arquivo);
+        armazenamento.registrarPontos("helbert", "estrela", 10);
+        armazenamento.registrarPontos("helena", "moeda", 20);
+        armazenamento.registrarPontos("marcos", "moeda", 5);
+        Assertions.assertEquals(
+            Set.of("helbert", "helena", "marcos"),
+            armazenamento.recuperarUsuarios()
+        );
     }
 
 }
