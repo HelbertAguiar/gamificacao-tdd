@@ -44,4 +44,26 @@ class ArmazenamentoTest {
         assertEquals(30, pontuacaoUsuarioSegundaChamada);
     }
 
+    @Test
+    void deveSomarPontosDoMesmoUsuarioNumCenarioMultiplosUsuariosMultiplasChamadas() {
+        Path arquivo = diretorioTemporario.resolve("pontos.txt");
+        Armazenamento armazenamento = new Armazenamento(arquivo);
+        int pontuacaoUsuarioPrimeiraChamada = 0;
+        armazenamento.registrarPontos("ana", "ouro", 10);
+        pontuacaoUsuarioPrimeiraChamada+=armazenamento.recuperarPontos("ana", "ouro");
+        assertEquals(10, pontuacaoUsuarioPrimeiraChamada);
+        int pontuacaoUsuarioSegundaChamada = 0;
+        armazenamento.registrarPontos("joao", "ouro", 20);
+        pontuacaoUsuarioSegundaChamada+=armazenamento.recuperarPontos("ana", "ouro");
+        assertEquals(10, pontuacaoUsuarioSegundaChamada);
+        int pontuacaoUsuarioTerceiraChamada = 0;
+        armazenamento.registrarPontos("ana", "ouro", 20);
+        pontuacaoUsuarioTerceiraChamada +=armazenamento.recuperarPontos("ana", "ouro");
+        assertEquals(30, pontuacaoUsuarioTerceiraChamada);
+        int pontuacaoUsuarioQuartaChamada = 0;
+        armazenamento.registrarPontos("ana", "estrelas", 50);
+        pontuacaoUsuarioQuartaChamada +=armazenamento.recuperarPontos("ana", "ouro");
+        assertEquals(30, pontuacaoUsuarioQuartaChamada);
+    }
+
 }
