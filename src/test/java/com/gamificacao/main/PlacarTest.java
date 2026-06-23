@@ -65,4 +65,15 @@ class PlacarTest {
         );
     }
 
+    @Test
+    void rankingNaoDeveIncluirUsuarioSemPontosDaqueleTipo() {
+        RepositorioDePontosMock repositorio = new RepositorioDePontosMock();
+        Placar placar = new Placar(repositorio);
+        repositorio.registrarPontos("helbert", "estrela", 25);
+        repositorio.registrarPontos("toco", "moeda", 100);
+        List<RankingItem> ranking = placar.recuperarRanking("estrela");
+        assertFalse(ranking.contains(new RankingItem("toco", 0)));
+        assertEquals(List.of(new RankingItem("helbert", 25)), ranking);
+    }
+
 }
