@@ -44,8 +44,13 @@ public class Armazenamento implements RepositorioPontos {
     }
 
     @Override
-    public void registrarPontos(String usuario, String tipoPonto, int pontuacao) {
-        String linha = usuario + ";" + tipoPonto + ";" + pontuacao + System.lineSeparator();
+    public void registrarPontos(String usuario, String tipo, int quantidade) {
+        if (quantidade <= 0) {
+            throw new IllegalArgumentException("A quantidade de pontos deve ser positiva.");
+        }
+
+        String linha = usuario + ";" + tipo + ";" + quantidade + System.lineSeparator();
+
         try {
             Files.writeString(arquivo, linha, StandardCharsets.UTF_8, CREATE, APPEND);
         } catch (IOException e) {
